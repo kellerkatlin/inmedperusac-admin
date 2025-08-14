@@ -1,0 +1,115 @@
+<p-toolbar styleClass="mb-6">
+    <ng-template #start>
+        <p-button label="Nuevo" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNew()" />
+    </ng-template>
+
+    <ng-template #end>
+        <p-button [label]="labelRefresh" icon="pi pi-refresh" severity="secondary" [loading]="loading" (onClick)="getCategory()" />
+    </ng-template>
+</p-toolbar>
+
+<p-card header="" [style]="{ 'border-radius': '6px' }">
+    <p-table
+        #dt
+        [value]="categories()"
+        [rows]="10"
+        [loading]="loading"
+        [paginator]="true"
+        [globalFilterFields]="['description', 'status']"
+        [tableStyle]="{ 'min-width': '100%' }"
+        [(selection)]="selectedCategories"
+        [rowHover]="true"
+        dataKey="id"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} categorías"
+        [showCurrentPageReport]="true"
+        [rowsPerPageOptions]="[10, 20, 30]"
+        showGridlines
+        [size]="'small'"
+    >
+        <ng-template #caption>
+            <div class="flex items-center justify-between">
+                <h5 class="m-0">Categorías</h5>
+                <p-iconfield>
+                    <p-inputicon styleClass="pi pi-search" />
+                    <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Buscar..." />
+                </p-iconfield>
+            </div>
+        </ng-template>
+
+        <ng-template #header>
+            <tr>
+                <th style="width: 12%">Imagen</th>
+                <th pSortableColumn="description" style="width: 58%">
+                    Descripción
+                    <p-sortIcon field="description" />
+                </th>
+                <th pSortableColumn="status" style="width: 20%">
+                    Estado
+                    <p-sortIcon field="status" />
+                </th>
+                <th style="width: 10%">Ope.</th>
+            </tr>
+        </ng-template>
+
+        <ng-template #body let-category>
+            <tr>
+                <td>
+                    <p-image [src]="category.image || placeholder" alt="Imagen" [preview]="true" [style]="{ width: '64px', height: '48px', objectFit: 'cover', borderRadius: '6px' }"></p-image>
+                </td>
+                <td>{{ category.description }}</td>
+                <td>
+                    <p-tag [value]="category.status" [severity]="getSeverity(category.status)" />
+                </td>
+                <td>
+                    <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" (click)="editCategory(category)" />
+                    <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="deleteCategory(category)" />
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</p-card>
+
+<p-dialog [(visible)]="categoryDialog" [position]="'center'" [style]="{ width: '42rem' }" [header]="category?.id ? 'Actualizar Categoría' : 'Nueva Categoría'" [modal]="true">
+    <ng-template #content>
+        <form [formGroup]="form" class="grid grid-cols-12 gap-6 md:grid-cols-12">
+            <div class="col-span-12 md:col-span-8">
+                <label for="description" class="block mb-3 font-bold">Descripción (*)</label>
+                <input type="text" pInputText id="description" formControlName="description" required autofocus fluid />
+                @if (submitted && form.controls.description.errors?.['required']) {
+                <small class="text-red-500"> Descripción es requerida. </small>
+                } @if (submitted && form.controls.description.errors?.['minlength']) {
+                <small class="text-red-500"> Mínimo 3 caracteres. </small>
+                }
+            </div>
+
+            <div class="col-span-12 md:col-span-4">
+                <label for="status" class="block mb-3 font-bold">Estado (*)</label>
+                <p-select id="status" formControlName="status" [options]="statusOptions" appendTo="body" optionLabel="name" optionValue="code" placeholder="Seleccione un estado" class="w-full" />
+                @if (submitted && form.controls.status.errors?.['required']) {
+                <small class="text-red-500"> Estado es requerido. </small>
+                }
+            </div>
+
+            <div class="col-span-12">
+                <label class="block mb-3 font-bold">Imagen</label>
+
+                <div class="flex items-start gap-4">
+                    <p-image [src]="form.get('image')?.value || placeholder" alt="Imagen" [preview]="true" class="rounded-xl overflow-hidden border border-surface-200/60" [style]="{width:'160px', height:'110px'}"></p-image>
+
+                    <div class="flex flex-col gap-2">
+                        <button pButton pRipple type="button" class="p-button-outlined rounded-xl" (click)="fileInput?.click()">Subir imagen</button>
+                        <small class="text-surface-500">Formatos: JPG, PNG, WEBP. Máx. ~2MB</small>
+                        <input #fileInput type="file" accept="image/*" class="hidden" (change)="onImageChange($event)" />
+                    </div>
+                </div>
+            </div>
+        </form>
+    </ng-template>
+
+    <ng-template #footer>
+        <p-button label="Cancelar" icon="pi pi-times" text (click)="hideDialog()" />
+        <p-button [disabled]="loading" [loading]="loading" [label]="loading ? (category?.id ? 'Actualizando...' : 'Guardando...') : category?.id ? 'Actualizar' : 'Guardar'" icon="pi pi-check" (click)="saveCategory()" />
+    </ng-template>
+</p-dialog>
+
+<p-confirmdialog key="confirm" [style]="{ width: '450px' }" />

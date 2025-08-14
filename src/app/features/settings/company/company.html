@@ -1,0 +1,148 @@
+<div class="max-w-6xl mx-auto p-4 md:p-6">
+    <p-toolbar class="rounded-2xl shadow-sm border border-surface-200/60 bg-white/70 dark:bg-surface-900/60 backdrop-blur">
+        <ng-template pTemplate="start">
+            <div class="flex items-center gap-3">
+                <span class="text-xl md:text-2xl font-semibold text-surface-900 dark:text-surface-0">Editar Empresa</span>
+            </div>
+        </ng-template>
+        <ng-template pTemplate="end">
+            <div class="flex gap-2">
+                <button pButton pRipple type="button" class="p-button-text" (click)="onCancel()">Cancelar</button>
+                <button pButton pRipple type="button" [disabled]="form.invalid || form.pristine" (click)="onSubmit()" class="bg-primary-500 hover:bg-primary-600 text-white rounded-xl px-4 py-2 shadow-sm">Guardar cambios</button>
+            </div>
+        </ng-template>
+    </p-toolbar>
+
+    <p-card class="mt-4 md:mt-6 rounded-2xl shadow-sm border border-surface-200/60 bg-white dark:bg-surface-900">
+        <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <div class="mb-6">
+                <p-tabs value="0">
+                    <p-tablist>
+                        <p-tab value="0">General</p-tab>
+                        <p-tab value="1">Misión & Visión</p-tab>
+                    </p-tablist>
+                    <!-- General -->
+                    <p-tabpanels>
+                        <p-tabpanel header="General" value="0">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <!-- Nombre Comercial -->
+                                <div class="space-y-1">
+                                    <label class="text-sm font-medium text-surface-700 dark:text-surface-200">Nombre Comercial</label>
+                                    <input pInputText formControlName="name" placeholder="Ej: Moccapp S.A.C." class="w-full rounded-xl" />
+                                    <small *ngIf="isInvalid('name')" class="text-red-500">Requerido.</small>
+                                </div>
+
+                                <!-- Razón Social -->
+                                <div class="space-y-1">
+                                    <label class="text-sm font-medium text-surface-700 dark:text-surface-200">Razón Social</label>
+                                    <input pInputText formControlName="businessName" placeholder="Ej: MOCCAPP SOCIEDAD ANÓNIMA CERRADA" class="w-full rounded-xl" />
+                                    <small *ngIf="isInvalid('businessName')" class="text-red-500">Requerido.</small>
+                                </div>
+
+                                <!-- Nro Documento -->
+                                <div class="space-y-1">
+                                    <label class="text-sm font-medium text-surface-700 dark:text-surface-200">N° Documento</label>
+                                    <input pInputText formControlName="identityDocument" placeholder="Ej: 2060XXXXXXXX" class="w-full rounded-xl tracking-wider" />
+                                    <small *ngIf="isInvalid('identityDocument')" class="text-red-500">Requerido.</small>
+                                </div>
+
+                                <!-- Dominio -->
+                                <div class="space-y-1">
+                                    <label class="text-sm font-medium text-surface-700 dark:text-surface-200">Dominio (Web)</label>
+                                    <input pInputText formControlName="domain" placeholder="Ej: moccapp.site" class="w-full rounded-xl" />
+                                    <small *ngIf="isInvalid('domain')" class="text-red-500">Requerido.</small>
+                                </div>
+
+                                <!-- Email -->
+                                <div class="space-y-1">
+                                    <label class="text-sm font-medium text-surface-700 dark:text-surface-200">Correo</label>
+                                    <input pInputText type="email" formControlName="email" placeholder="contacto@empresa.com" class="w-full rounded-xl" />
+                                    <small *ngIf="isInvalid('email')" class="text-red-500"> {{ form.get('email')?.errors?.['required'] ? 'Requerido.' : 'Formato inválido.' }} </small>
+                                </div>
+
+                                <!-- Dirección -->
+                                <div class="md:col-span-2 space-y-1">
+                                    <label class="text-sm font-medium text-surface-700 dark:text-surface-200">Dirección</label>
+                                    <input pInputText formControlName="address" placeholder="Calle, número, distrito, ciudad" class="w-full rounded-xl" />
+                                    <small *ngIf="isInvalid('address')" class="text-red-500">Requerido.</small>
+                                </div>
+
+                                <!-- Resumen -->
+                                <div class="md:col-span-2 space-y-1">
+                                    <label class="text-sm font-medium text-surface-700 dark:text-surface-200">Resumen</label>
+                                    <textarea pInputTextarea formControlName="summary" [autoResize]="true" rows="3" placeholder="Breve descripción de la empresa" class="w-full rounded-xl"></textarea>
+                                </div>
+                            </div>
+                        </p-tabpanel>
+
+                        <!-- Misión & Visión -->
+                        <p-tabpanel header="Misión & Visión" value="1">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                <!-- Misión -->
+                                <div class="rounded-2xl p-5 border border-surface-200/60 bg-surface-50/60 dark:bg-surface-900/60">
+                                    <h3 class="text-lg font-semibold mb-3 text-surface-900 dark:text-surface-0 flex items-center gap-2">
+                                        <span>Misión</span>
+                                    </h3>
+                                    <div class="space-y-1 mb-3">
+                                        <label class="text-sm font-medium text-surface-700 dark:text-surface-200">Descripción</label>
+                                        <textarea pInputTextarea formControlName="missionDescription" [autoResize]="true" rows="4" placeholder="Describe la misión de la empresa" class="w-full rounded-xl"></textarea>
+                                    </div>
+
+                                    <div class="flex items-start gap-4">
+                                        <p-image
+                                            [src]="form.get('missionImage')?.value || placeholder"
+                                            [alt]="'Misión'"
+                                            [preview]="true"
+                                            class="rounded-xl overflow-hidden border border-surface-200/60"
+                                            [style]="{width:'140px', height:'140px'}"
+                                        ></p-image>
+
+                                        <div class="flex flex-col gap-2">
+                                            <button pButton pRipple type="button" class="p-button-outlined rounded-xl" (click)="fileMission?.click()">Subir imagen</button>
+                                            <small class="text-surface-500">JPG/PNG. Recomendado 800×600.</small>
+                                            <input #fileMission type="file" accept="image/*" class="hidden" (change)="onImageChange($event, 'missionImage')" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Visión -->
+                                <div class="rounded-2xl p-5 border border-surface-200/60 bg-surface-50/60 dark:bg-surface-900/60">
+                                    <h3 class="text-lg font-semibold mb-3 text-surface-900 dark:text-surface-0 flex items-center gap-2">
+                                        <span>Visión</span>
+                                    </h3>
+                                    <div class="space-y-1 mb-3">
+                                        <label class="text-sm font-medium text-surface-700 dark:text-surface-200">Descripción</label>
+                                        <textarea pInputTextarea formControlName="visionDescription" [autoResize]="true" rows="4" placeholder="Describe la visión de la empresa" class="w-full rounded-xl"></textarea>
+                                    </div>
+
+                                    <div class="flex items-start gap-4">
+                                        <p-image
+                                            [src]="form.get('visionImage')?.value || placeholder"
+                                            [alt]="'Visión'"
+                                            [preview]="true"
+                                            class="rounded-xl overflow-hidden border border-surface-200/60"
+                                            [style]="{width:'140px', height:'140px'}"
+                                        ></p-image>
+
+                                        <div class="flex flex-col gap-2">
+                                            <button pButton pRipple type="button" class="p-button-outlined rounded-xl" (click)="fileVision?.click()">Subir imagen</button>
+                                            <small class="text-surface-500">JPG/PNG. Recomendado 800×600.</small>
+                                            <input #fileVision type="file" accept="image/*" class="hidden" (change)="onImageChange($event, 'visionImage')" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </p-tabpanel>
+                    </p-tabpanels>
+                </p-tabs>
+            </div>
+
+            <p-divider></p-divider>
+
+            <div class="flex justify-end gap-2">
+                <button pButton pRipple type="button" class="p-button-text" (click)="onCancel()">Cancelar</button>
+                <button pButton pRipple type="button" [disabled]="form.invalid || form.pristine" (click)="onSubmit()" class="bg-primary-500 hover:bg-primary-600 text-white rounded-xl px-4 py-2 shadow-sm">Guardar cambios</button>
+            </div>
+        </form>
+    </p-card>
+</div>
