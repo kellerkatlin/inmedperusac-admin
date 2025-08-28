@@ -42,10 +42,7 @@
                     Nombre
                     <p-sortIcon field="name" />
                 </th>
-                <th pSortableColumn="dataType" style="width: 25%">
-                    Tipo
-                    <p-sortIcon field="dataType" />
-                </th>
+
                 <th pSortableColumn="status" style="width: 25%">
                     Estado
                     <p-sortIcon field="status" />
@@ -57,9 +54,7 @@
         <ng-template #body let-attr>
             <tr>
                 <td>{{ attr.name }}</td>
-                <td>
-                    <p-tag [value]="attr.dataType" severity="info" />
-                </td>
+
                 <td>
                     <p-tag [value]="attr.status" [severity]="getSeverity(attr.status)" />
                 </td>
@@ -83,12 +78,6 @@
                 } @if (submitted && form.controls.name.errors?.['minlength']) {
                 <small class="text-red-500"> Mínimo 2 caracteres. </small>
                 }
-            </div>
-
-            <div class="col-span-12 md:col-span-4">
-                <label for="dataType" class="block mb-3 font-bold">Tipo (*)</label>
-                <p-select id="dataType" formControlName="dataType" [options]="dataTypeOptions" appendTo="body" optionLabel="name" optionValue="code" placeholder="Seleccione un tipo" class="w-full" />
-                <small class="text-surface-500"> @if (form.controls.dataType.value === 'number') { Valor numérico libre. } @else if (form.controls.dataType.value === 'boolean') { Valor verdadero/falso. } @else { Texto libre. } </small>
             </div>
 
             <div class="col-span-12 md:col-span-3">

@@ -1,0 +1,140 @@
+<p-toolbar styleClass="mb-6">
+    <ng-template #start>
+        <div class="flex items-center gap-3">
+            <p-select
+                [options]="[
+          { label: 'No atendidos', value: 'UNATTENDED' },
+          { label: 'Atendidos', value: 'ATTENDED' },
+          { label: 'Todos', value: 'ALL' }
+        ]"
+                [(ngModel)]="filterKind"
+                (ngModelChange)="onChangeFilterKind()"
+                styleClass="w-48"
+                placeholder="Filtrar"
+            />
+            <p-button label="Marcar seleccionados como atendidos" icon="pi pi-check-circle" severity="success" [disabled]="!selected?.length" (onClick)="markSelectedAsAttended()" />
+        </div>
+    </ng-template>
+
+    <ng-template #end>
+        <div class="flex items-center gap-3">
+            <span class="text-sm text-surface-500">Sin atender: <b>{{ unattendedCount }}</b></span>
+            <p-button [label]="labelRefresh" icon="pi pi-refresh" severity="secondary" [loading]="loading" (onClick)="getContacts()" />
+        </div>
+    </ng-template>
+</p-toolbar>
+
+<p-card [style]="{ 'border-radius': '6px' }">
+    <p-table
+        #dt
+        [value]="filtered()"
+        [rows]="10"
+        [loading]="loading"
+        [paginator]="true"
+        [globalFilterFields]="['fullName', 'email', 'phone', 'message']"
+        [tableStyle]="{ 'min-width': '100%' }"
+        [(selection)]="selected"
+        [rowHover]="true"
+        dataKey="id"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} contactos"
+        [showCurrentPageReport]="true"
+        [rowsPerPageOptions]="[10, 20, 30]"
+        showGridlines
+        [size]="'small'"
+        selectionMode="multiple"
+    >
+        <ng-template #caption>
+            <div class="flex items-center justify-between">
+                <h5 class="m-0">Contactos</h5>
+                <p-iconfield>
+                    <p-inputicon styleClass="pi pi-search" />
+                    <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Buscar por nombre, email, teléfono..." />
+                </p-iconfield>
+            </div>
+        </ng-template>
+
+        <ng-template #header>
+            <tr>
+                <th style="width: 3rem">
+                    <p-tableHeaderCheckbox />
+                </th>
+                <th pSortableColumn="fullName" style="width: 18%">
+                    Nombre
+                    <p-sortIcon field="fullName" />
+                </th>
+                <th pSortableColumn="email" style="width: 20%">
+                    Email
+                    <p-sortIcon field="email" />
+                </th>
+                <th pSortableColumn="phone" style="width: 14%">
+                    Teléfono
+                    <p-sortIcon field="phone" />
+                </th>
+                <th style="width: 30%">Mensaje</th>
+                <th pSortableColumn="isAttended" style="width: 10%">
+                    Estado
+                    <p-sortIcon field="isAttended" />
+                </th>
+                <th style="width: 8%">Ope.</th>
+            </tr>
+        </ng-template>
+
+        <ng-template #body let-c>
+            <tr>
+                <td>
+                    <p-tableCheckbox [value]="c" />
+                </td>
+                <td>{{ c.fullName }}</td>
+                <td>{{ c.email }}</td>
+                <td>{{ c.phone }}</td>
+                <td>
+                    <span class="text-surface-700">{{ short(c.message, 90) }}</span>
+                    <button pButton pRipple type="button" text size="small" class="ml-2" (click)="openDetail(c)">ver</button>
+                </td>
+                <td>
+                    <p-tag [value]="c.isAttended ? 'ATENDIDO' : 'PENDIENTE'" [severity]="getSeverity(c.isAttended)" />
+                </td>
+                <td>
+                    <div class="flex gap-2">
+                        <p-button icon="pi pi-check" [rounded]="true" [outlined]="true" severity="success" [disabled]="c.isAttended || loading" pTooltip="Marcar como atendido" (click)="markAttended(c)" />
+                        <p-button icon="pi pi-eye" [rounded]="true" [outlined]="true" (click)="openDetail(c)" pTooltip="Ver detalle" />
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</p-card>
+
+<!-- Detalle -->
+<p-dialog [(visible)]="detailDialog" [position]="'center'" [style]="{ width: '42rem' }" [header]="'Detalle de contacto'" [modal]="true">
+    <ng-template #content>
+        <div class="grid grid-cols-12 gap-4">
+            <div class="col-span-12 md:col-span-6">
+                <label class="block mb-1 font-bold">Nombre</label>
+                <div>{{ viewing?.fullName }}</div>
+            </div>
+            <div class="col-span-12 md:col-span-6">
+                <label class="block mb-1 font-bold">Email</label>
+                <div>{{ viewing?.email }}</div>
+            </div>
+            <div class="col-span-12 md:col-span-6">
+                <label class="block mb-1 font-bold">Teléfono</label>
+                <div>{{ viewing?.phone }}</div>
+            </div>
+            <div class="col-span-12">
+                <label class="block mb-2 font-bold">Mensaje</label>
+                <div class="p-3 border rounded-md whitespace-pre-wrap">{{ viewing?.message }}</div>
+            </div>
+            <div class="col-span-12">
+                <p-tag [value]="viewing?.isAttended ? 'ATENDIDO' : 'PENDIENTE'" [severity]="getSeverity(!!viewing?.isAttended)" />
+            </div>
+        </div>
+    </ng-template>
+
+    <ng-template #footer>
+        <p-button label="Cerrar" icon="pi pi-times" text (click)="closeDetail()" />
+        <p-button *ngIf="!viewing?.isAttended" [disabled]="loading" [loading]="loading" label="Marcar como atendido" icon="pi pi-check" severity="success" (click)="markAttended(viewing!)" />
+    </ng-template>
+</p-dialog>
+
+<p-confirmdialog key="confirm" [style]="{ width: '450px' }" />

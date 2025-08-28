@@ -12,9 +12,10 @@ export const appRoutes: Routes = [
         component: AppLayout,
         canActivate: [authGuard],
         children: [
-            { path: '', component: Dashboard },
+            { path: '', redirectTo: 'products', pathMatch: 'full' },
             { path: 'settings', loadChildren: () => import('./app/features/settings/settings.routes') },
             { path: 'products', loadChildren: () => import('./app/features/products/products.routes') },
+            { path: 'general', loadChildren: () => import('./app/features/general/messages.routes') },
             { path: 'uikit', loadChildren: () => import('./app/pages/uikit/uikit.routes') },
             { path: 'documentation', component: Documentation },
             { path: 'pages', loadChildren: () => import('./app/pages/pages.routes') }

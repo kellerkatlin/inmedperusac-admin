@@ -70,7 +70,7 @@
                     >
                     </p-image>
                 </td>
-                <td>{{ prod.description }}</td>
+                <td>{{ prod.tittle }}</td>
                 <td>{{ prod.category?.description }}</td>
                 <td>{{ prod.price | number:'1.2-2' }}</td>
                 <td>
@@ -89,28 +89,19 @@
     <ng-template #content>
         <form [formGroup]="form" class="grid grid-cols-12 gap-6 md:grid-cols-12">
             <div class="col-span-12 md:col-span-6">
+                <label for="tittle" class="block mb-3 font-bold">Título (*)</label>
+                <input id="tittle" type="text" pInputText formControlName="tittle" required fluid />
+                @if (submitted && form.controls.tittle.errors?.['required']) {
+                <small class="text-red-500"> Título es requerido. </small>
+                } @if (submitted && form.controls.tittle.errors?.['minlength']) {
+                <small class="text-red-500"> Mínimo 3 caracteres. </small>
+                }
+            </div>
+            <div class="col-span-12 md:col-span-6">
                 <label for="categoryId" class="block mb-3 font-bold">Categoría (*)</label>
                 <p-select id="categoryId" formControlName="categoryId" [options]="categories()" appendTo="body" optionLabel="description" optionValue="id" placeholder="Seleccione una categoría" class="w-full" />
                 @if (submitted && form.controls.categoryId.errors?.['required']) {
                 <small class="text-red-500"> Categoría es requerida. </small>
-                }
-            </div>
-
-            <div class="col-span-12 md:col-span-6">
-                <label for="status" class="block mb-3 font-bold">Estado (*)</label>
-                <p-select id="status" formControlName="status" [options]="statusOptions" appendTo="body" optionLabel="name" optionValue="code" placeholder="Seleccione un estado" class="w-full" />
-                @if (submitted && form.controls.status.errors?.['required']) {
-                <small class="text-red-500"> Estado es requerido. </small>
-                }
-            </div>
-
-            <div class="col-span-12">
-                <label for="description" class="block mb-3 font-bold">Descripción (*)</label>
-                <input id="description" type="text" pInputText formControlName="description" required fluid />
-                @if (submitted && form.controls.description.errors?.['required']) {
-                <small class="text-red-500"> Descripción es requerida. </small>
-                } @if (submitted && form.controls.description.errors?.['minlength']) {
-                <small class="text-red-500"> Mínimo 3 caracteres. </small>
                 }
             </div>
 
@@ -195,6 +186,25 @@
                         <input #fileInput type="file" accept="image/*" class="hidden" multiple (change)="onImagesChange($event)" />
                     </div>
                 </div>
+            </div>
+
+            <div class="col-span-12">
+                <label class="block mb-3 font-bold">Descripción (*)</label>
+
+                <p-editor formControlName="description" [style]="{ height: '250px' }" (onTextChange)="onEditorChange($event)"></p-editor>
+
+                <div class="mt-2 flex justify-between items-center">
+                    <small class="text-surface-500"> Puedes usar <b>negrita</b>, <i>cursiva</i>, encabezados, listas y enlaces. </small>
+                    <small class="text-surface-500"> {{ descriptionPlainLength }}/{{ maxDescriptionPlainChars }} caracteres </small>
+                </div>
+
+                @if (submitted && form.controls.description.errors?.['required']) {
+                <small class="text-red-500 block"> Descripción es requerida. </small>
+                } @if (submitted && form.controls.description.errors?.['minPlainText']) {
+                <small class="text-red-500 block"> Mínimo 10 caracteres de texto. </small>
+                } @if (submitted && form.controls.description.errors?.['maxPlainText']) {
+                <small class="text-red-500 block"> Máximo {{maxDescriptionPlainChars}} caracteres de texto. </small>
+                }
             </div>
         </form>
     </ng-template>

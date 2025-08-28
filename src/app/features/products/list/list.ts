@@ -8,7 +8,7 @@ import { CategoryService } from '@/core/service/api/category.service';
 import { ProductService } from '@/core/service/api/product.service';
 import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
-import { FormControl, FormGroup, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormControl, FormGroup, NonNullableFormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -26,10 +26,28 @@ import { Table, TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { ToolbarModule } from 'primeng/toolbar';
-import { BehaviorSubject, forkJoin } from 'rxjs';
+import { BehaviorSubject, forkJoin, map } from 'rxjs';
 import { TextareaModule } from 'primeng/textarea';
 
+import { Editor } from 'primeng/editor';
+
 type AttrId = number;
+
+function plainTextLengthValidator(opts: { min?: number; max?: number }) {
+    return (control: AbstractControl): ValidationErrors | null => {
+        const html: string = control.value ?? '';
+        const text = html
+            .replace(/<[^>]+>/g, '')
+            .replace(/\s+/g, ' ')
+            .trim(); // quita tags y normaliza espacios
+        const len = text.length;
+
+        if (opts.min && len < opts.min) return { minPlainText: true };
+        if (opts.max && len > opts.max) return { maxPlainText: true };
+        return null;
+    };
+}
+
 @Component({
     selector: 'app-list',
     imports: [
@@ -39,7 +57,7 @@ type AttrId = number;
         RippleModule,
         ToastModule,
         ToolbarModule,
-
+        Editor,
         TextareaModule,
         InputTextModule,
         InputNumberModule,
@@ -82,6 +100,9 @@ export class List {
     private valuesCache = new Map<AttrId, AttributeValueResponse[]>();
     selectedByAttribute = new Map<AttrId, number[]>();
 
+    maxDescriptionPlainChars = 4000;
+    descriptionPlainLength = 0;
+
     // state
     productDialog = false;
     loading = false;
@@ -100,8 +121,8 @@ export class List {
     imagePreviews: string[] = [];
 
     statusOptions = [
-        { name: 'Activo', code: 'ACTIVE' },
-        { name: 'Inactivo', code: 'INACTIVE' }
+        { name: 'Activo', code: 'ACTIVO' },
+        { name: 'Inactivo', code: 'INACTIVO' }
     ];
 
     // ====== FORM ======
@@ -109,13 +130,15 @@ export class List {
         categoryId: FormControl<number | null>; // UI en number, al enviar se castea a string
         description: FormControl<string>;
         price: FormControl<number>;
+        tittle: FormControl<string>;
         status: FormControl<string>;
         attributeValueIds: FormControl<number[]>; // múltiples ids
     }> = this.fb.group({
         categoryId: this.fb.control<number | null>(null, { validators: [Validators.required] }),
-        description: this.fb.control('', { validators: [Validators.required, Validators.minLength(3)] }),
+        tittle: this.fb.control(''),
+        description: ['', [Validators.required, plainTextLengthValidator({ min: 10, max: this.maxDescriptionPlainChars })]],
         price: this.fb.control(0, { validators: [Validators.required, Validators.min(0)] }),
-        status: this.fb.control('ACTIVE', { validators: [Validators.required] }),
+        status: this.fb.control('ACTIVO', { validators: [Validators.required] }),
         attributeValueIds: this.fb.control<number[]>([], { validators: [] })
     });
 
@@ -169,29 +192,40 @@ export class List {
                     return;
                 }
 
-                const calls = attrs.map((a) => this.attributeValueService.get(a.id));
+                // Para cada atributo, traigo valores y les agrego attributeId
+                const calls = attrs.map((a) =>
+                    this.attributeValueService.get(a.id).pipe(
+                        map((r: ApiResponse<AttributeValueResponse[]>) => {
+                            const values = (r?.data ?? []).map((v) => ({ ...v, attributeId: a.id }) as any);
+                            // guarda cache por atributo para getValueObj(...)
+                            this.valuesCache.set(a.id, values);
+                            return values;
+                        })
+                    )
+                );
+
                 forkJoin(calls).subscribe({
-                    next: (respArr: ApiResponse<AttributeValueResponse[]>[]) => {
-                        const flat = respArr.flatMap((r) => r?.data ?? []);
+                    next: (arrs: AttributeValueResponse[][]) => {
+                        const flat = arrs.flat();
                         this.attributeValues.set(flat);
 
-                        // ---- reconstruir mapa de seleccion por atributo (si hay preselección) ----
+                        // ---- reconstruir mapa seleccionado por atributo ----
                         if (preselectedIds?.length) {
-                            this.selectedByAttribute.clear();
                             const byAttr = new Map<number, number[]>();
-                            // IMPORTANTE: cada AttributeValueResponse debe tener attributeId
+
                             preselectedIds.forEach((vid) => {
-                                const v = flat.find((x) => x.id === vid);
-                                if (!v || (v as any).attributeId == null) return; // asegúrate de tener attributeId en el modelo
-                                const aId = (v as any).attributeId as number;
-                                const arr = byAttr.get(aId) ?? [];
-                                arr.push(vid);
-                                byAttr.set(aId, arr);
+                                const v: any = flat.find((x) => x.id === vid);
+                                if (!v || v.attributeId == null) return;
+                                const aId = v.attributeId as number;
+                                const list = byAttr.get(aId) ?? [];
+                                list.push(vid);
+                                byAttr.set(aId, list);
                             });
+
                             this.selectedByAttribute = byAttr;
                             this.syncFormAttributeValueIds();
 
-                            // si ya hay un atributo elegido, restaura su selección actual en el listbox
+                            // si hay atributo activo, precarga su selección en el listbox
                             const curAttr = this.selectedAttributeId.value;
                             if (curAttr) {
                                 this.currentAttrValueIds.setValue([...(this.selectedByAttribute.get(curAttr) ?? [])]);
@@ -212,9 +246,9 @@ export class List {
 
     getSeverity(status: string) {
         switch ((status || '').toUpperCase()) {
-            case 'ACTIVE':
+            case 'ACTIVO':
                 return 'success';
-            case 'INACTIVE':
+            case 'INACTIVO':
                 return 'warn';
             default:
                 return 'info';
@@ -241,7 +275,7 @@ export class List {
             categoryId: null,
             description: '',
             price: 0,
-            status: 'ACTIVE',
+            status: 'ACTIVO',
             attributeValueIds: []
         });
 
@@ -275,8 +309,9 @@ export class List {
         this.form.patchValue({
             categoryId: p.category?.id ?? null,
             description: p.description ?? '',
+            tittle: p.tittle ?? '',
             price: p.price ?? 0,
-            status: p.status ?? 'ACTIVE',
+            status: p.status ?? 'ACTIVO',
             attributeValueIds: ids
         });
 
@@ -438,6 +473,13 @@ export class List {
         this.imagePreviews.splice(previewIdx, 1);
     }
 
+    onEditorChange(e: any) {
+        const html: string = e?.htmlValue ?? this.form.controls.description.value ?? '';
+        const text = html.replace(/<[^>]+>/g, '').trim();
+        this.descriptionPlainLength = text.length;
+        this.form.controls.description.updateValueAndValidity({ onlySelf: true, emitEvent: false });
+    }
+
     // ====== Guardar (create/update) ======
     saveProduct() {
         this.submitted = true;
@@ -450,8 +492,9 @@ export class List {
         const fd = new FormData();
         fd.append('categoryId', String(v.categoryId ?? ''));
         fd.append('description', v.description ?? '');
+        fd.append('tittle', v.tittle ?? '');
         fd.append('price', String(v.price ?? '')); // backend espera string
-        fd.append('status', v.status ?? 'ACTIVE');
+        fd.append('status', v.status ?? 'ACTIVO');
 
         // attributeValueIds como string (p.ej. "1,2,3")
         const avIds = (v.attributeValueIds ?? []).join(',');

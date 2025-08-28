@@ -4,6 +4,7 @@ import { CategoryResponse } from './category.mode.';
 export interface ProductResponse {
     id: number;
     category: CategoryResponse;
+    tittle: string;
     description: string;
     price: number;
     status: string;
