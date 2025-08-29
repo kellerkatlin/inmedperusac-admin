@@ -79,14 +79,6 @@
                 <small class="text-red-500"> Mínimo 2 caracteres. </small>
                 }
             </div>
-
-            <div class="col-span-12 md:col-span-3">
-                <label for="status" class="block mb-3 font-bold">Estado (*)</label>
-                <p-select id="status" formControlName="status" [options]="statusOptions" appendTo="body" optionLabel="name" optionValue="code" placeholder="Seleccione un estado" class="w-full" />
-                @if (submitted && form.controls.status.errors?.['required']) {
-                <small class="text-red-500"> Estado es requerido. </small>
-                }
-            </div>
         </form>
 
         <!-- Sección de VALORES solo para SELECT/MULTISELECT -->

@@ -90,7 +90,7 @@ export class Attributes {
     }> = this.fb.group({
         name: this.fb.control('', { nonNullable: true, validators: [Validators.required, Validators.minLength(2)] }),
         dataType: this.fb.control<DataType>('string', { nonNullable: true, validators: [Validators.required] }),
-        status: this.fb.control('ACTIVE', { nonNullable: true, validators: [Validators.required] })
+        status: this.fb.control('ACTIVO', { nonNullable: true, validators: [Validators.required] })
     });
 
     // form array para valores (solo SELECT/MULTISELECT o si decides permitir preset en otros)
@@ -141,7 +141,7 @@ export class Attributes {
         this.submitted = false;
         this.valuesToDelete = [];
         this.initialValues = [];
-        this.form.reset({ name: '', dataType: 'string', status: 'ACTIVE' });
+        this.form.reset({ name: '', dataType: 'string', status: 'ACTIVO' });
         this.valuesForm.clear();
         this.attributeDialog = true;
     }
