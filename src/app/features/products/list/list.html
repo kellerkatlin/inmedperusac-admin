@@ -176,8 +176,14 @@
                 <label class="block mb-3 font-bold">Imágenes</label>
                 <div class="flex items-start gap-4 flex-wrap">
                     <!-- preview existentes + nuevas -->
+                    <!-- preview existentes + nuevas -->
                     <ng-container *ngFor="let src of imagePreviews; let idx = index">
-                        <p-image [src]="src" alt="Imagen" [preview]="true" class="rounded-xl overflow-hidden border border-surface-200/60" [style]="{width:'120px', height:'90px', objectFit:'cover'}"> </p-image>
+                        <div class="relative inline-block">
+                            <p-image [src]="src" alt="Imagen" [preview]="true" class="rounded-xl overflow-hidden border border-surface-200/60" [style]="{width:'120px', height:'90px', objectFit:'cover'}"> </p-image>
+
+                            <!-- botón para eliminar SOLO si es nueva -->
+                            <button *ngIf="canRemovePreview(idx)" pButton type="button" icon="pi pi-times" class="p-button-rounded p-button-danger p-button-sm absolute -top-2 -right-2" (click)="removePreviewAt(idx)"></button>
+                        </div>
                     </ng-container>
 
                     <div class="flex flex-col gap-2">

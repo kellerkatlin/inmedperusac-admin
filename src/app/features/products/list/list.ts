@@ -341,6 +341,27 @@ export class List {
         this.currentAttrValueIds.setValue([], { emitEvent: false });
     }
 
+    /** cuántas previews corresponden a imágenes existentes del producto */
+    private get existingPreviewCount(): number {
+        return this.product?.productImages?.length ?? 0;
+    }
+
+    /** se puede eliminar solo lo nuevo (no lo existente del backend) */
+    canRemovePreview(index: number): boolean {
+        return index >= this.existingPreviewCount;
+    }
+
+    /** elimina una foto de la previsualización (solo nuevas) */
+    removePreviewAt(index: number) {
+        if (!this.canRemovePreview(index)) {
+            // es una imagen existente del producto -> no se elimina aquí
+            return;
+        }
+        const newIdx = index - this.existingPreviewCount; // índice dentro de los nuevos
+        this.imageFiles.splice(newIdx, 1);
+        this.imagePreviews.splice(index, 1);
+    }
+
     hideDialog() {
         this.productDialog = false;
         this.submitted = false;
