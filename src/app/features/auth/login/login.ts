@@ -30,8 +30,8 @@ export class Login {
         email: FormControl<string | null>;
         password: FormControl<string | null>;
     }> = this._fb.group({
-        email: this._fb.control('arianjosafat67@gmail.com', [Validators.required, Validators.email]),
-        password: this._fb.control('090901', [Validators.required])
+        email: this._fb.control('', [Validators.required, Validators.email]),
+        password: this._fb.control('', [Validators.required])
     });
 
     onSubmit() {
