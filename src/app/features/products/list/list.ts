@@ -137,7 +137,7 @@ export class List {
         categoryId: this.fb.control<number | null>(null, { validators: [Validators.required] }),
         tittle: this.fb.control(''),
         description: ['', [Validators.required, plainTextLengthValidator({ min: 10, max: this.maxDescriptionPlainChars })]],
-        price: this.fb.control(0, { validators: [Validators.required, Validators.min(0)] }),
+        price: this.fb.control(0),
         status: this.fb.control('ACTIVO', { validators: [Validators.required] }),
         attributeValueIds: this.fb.control<number[]>([], { validators: [] })
     });

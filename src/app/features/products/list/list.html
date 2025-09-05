@@ -47,10 +47,7 @@
                     Categoría
                     <p-sortIcon field="category.description" />
                 </th>
-                <th pSortableColumn="price" style="width: 15%">
-                    Precio
-                    <p-sortIcon field="price" />
-                </th>
+
                 <th pSortableColumn="status" style="width: 15%">
                     Estado
                     <p-sortIcon field="status" />
@@ -72,7 +69,6 @@
                 </td>
                 <td>{{ prod.tittle }}</td>
                 <td>{{ prod.category?.description }}</td>
-                <td>{{ prod.price | number:'1.2-2' }}</td>
                 <td>
                     <p-tag [value]="prod.status" [severity]="getSeverity(prod.status)" />
                 </td>
@@ -102,14 +98,6 @@
                 <p-select id="categoryId" formControlName="categoryId" [options]="categories()" appendTo="body" optionLabel="description" optionValue="id" placeholder="Seleccione una categoría" class="w-full" />
                 @if (submitted && form.controls.categoryId.errors?.['required']) {
                 <small class="text-red-500"> Categoría es requerida. </small>
-                }
-            </div>
-
-            <div class="col-span-12 md:col-span-6">
-                <label for="price" class="block mb-3 font-bold">Precio (*)</label>
-                <p-inputNumber inputId="price" formControlName="price" mode="decimal" [min]="0" [minFractionDigits]="0" [maxFractionDigits]="2"></p-inputNumber>
-                @if (submitted && form.controls.price.errors?.['required']) {
-                <small class="text-red-500 block"> Precio es requerido. </small>
                 }
             </div>
 
